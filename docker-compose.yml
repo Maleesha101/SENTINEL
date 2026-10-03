@@ -1,0 +1,49 @@
+services:
+  app:
+    build:
+      context: ./docker/app
+    environment:
+      APP_ENV: local
+      DB_HOST: postgres
+      DB_DATABASE: sentinel
+      DB_USERNAME: sentinel
+      DB_PASSWORD: sentinel
+    depends_on:
+      - postgres
+    networks:
+      - sentinel
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: sentinel
+      POSTGRES_USER: sentinel
+      POSTGRES_PASSWORD: sentinel
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - sentinel
+
+  nginx:
+    image: nginx:1.25-alpine
+    depends_on:
+      - app
+    ports:
+      - "8080:80"
+    networks:
+      - sentinel
+
+  review-bot:
+    build:
+      context: ./docker/review-bot
+    depends_on:
+      - nginx
+    networks:
+      - sentinel
+
+volumes:
+  postgres-data:
+
+networks:
+  sentinel:
+    driver: bridge
